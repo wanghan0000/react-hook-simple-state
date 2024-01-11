@@ -99,9 +99,6 @@ export class UserDataCenter {
       if (maps?.has(target) && maps?.size !== 1) {
         maps.delete(target);
       }
-      // if (maps?.size === 0) {
-      //     this.cache.delete(packetId)
-      // }
     }
   }
 }
