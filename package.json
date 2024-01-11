@@ -1,6 +1,6 @@
 {
     "name": "react-hook-simple-state",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "React State Easy",
     "repository": "https://github.com/wanghan0000/react-hook-simple-state.git",
     "author": "jokerma <linlovexiaojun@gmail.com>",
@@ -16,7 +16,7 @@
       "test": "vitest run --coverage --environment jsdom",
       "test:dev": "vitest --ui --coverage --environment jsdom",
       "build": "rollup -c --configPlugin @rollup/plugin-typescript",
-      "prepublishOnly": "rm -rf dist coverage && npm test && npm run build"
+      "prepublishOnly": "del dist coverage && npm test && npm run build"
     },
     "engines": {
       "node": "^12.20.0 || ^14.18.0 || >=16.0.0"

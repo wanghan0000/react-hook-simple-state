@@ -1,31 +1,25 @@
 import { EventMgr } from "./EventMgr";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 export const useStore = <T>(
   key: string,
   defaultValue?: any
 ): [T, (data: T) => void] => {
-  const target = useRef(Symbol());
   // eslint-disable-next-line @typescript-eslint/no-use-before-define
-  const cacheData = UserDataCenter.getInstance().getDataByPacktId(
-    key,
-    target.current
-  );
+  const cacheData = UserDataCenter.getInstance().getDataByPacktId(key);
   const value = cacheData || defaultValue;
 
   if (!cacheData && defaultValue) {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    UserDataCenter.getInstance().setData(key, defaultValue, target.current);
+    UserDataCenter.getInstance().setData(key, defaultValue, null);
   }
 
   const [data, setDataIn] = useState<T>(value);
 
   useEffect(() => {
+    const target = Symbol();
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    const data = UserDataCenter.getInstance().getDataByPacktId(
-      key,
-      target.current
-    );
+    const data = UserDataCenter.getInstance().getDataByPacktId(key);
     if (data) {
       setDataIn(data);
     }
@@ -33,15 +27,15 @@ export const useStore = <T>(
       key,
       (inData: T) => {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        UserDataCenter.getInstance().setData(key, inData, target.current);
+        UserDataCenter.getInstance().setData(key, inData, target);
         setDataIn(inData);
       },
-      target.current
+      target
     );
     return () => {
-      EventMgr.getInstance().removeByTarget(target.current);
+      EventMgr.getInstance().removeByTarget(target);
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
-      UserDataCenter.getInstance().clearByPacktId(key, target.current);
+      UserDataCenter.getInstance().clearByPacktId(key, target);
     };
   }, []);
 
@@ -54,7 +48,7 @@ export const useStore = <T>(
 
 export class UserDataCenter {
   private cache: Map<string, Map<any, any>> = new Map<string, Map<any, any>>();
-
+  private cacheData: Map<string, any> = new Map<string, any>();
   private static instance: UserDataCenter;
 
   static getInstance(): UserDataCenter {
@@ -64,17 +58,9 @@ export class UserDataCenter {
     return this.instance;
   }
 
-  getDataByPacktId(packtId: string, target: any) {
-    if (this.cache.has(packtId)) {
-      const maps: any = this.cache.get(packtId);
-      if (maps?.has(target)) {
-        return maps.get(target);
-      } else {
-        if (maps?.size > 0) {
-          const values = maps.values();
-          return values.next().value;
-        }
-      }
+  getDataByPacktId(packtId: string) {
+    if (this.cacheData.has(packtId)) {
+      return this.cacheData.get(packtId);
     }
   }
 
@@ -91,13 +77,17 @@ export class UserDataCenter {
       maps.set(target, data);
       this.cache.set(packtId, maps);
     }
+    this.cacheData.set(packtId, data);
   }
 
   clearByPacktId(packetId: string, target: any) {
     if (this.cache.has(packetId)) {
       const maps = this.cache.get(packetId);
-      if (maps?.has(target) && maps?.size !== 1) {
+      if (maps?.has(target)) {
         maps.delete(target);
+      }
+      if (maps?.size === 0) {
+        this.cache.delete(packetId);
       }
     }
   }
